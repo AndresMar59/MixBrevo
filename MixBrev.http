@@ -1,0 +1,6 @@
+@MixBrev_HostAddress = http://localhost:5230
+
+GET {{MixBrev_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

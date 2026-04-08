@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "MixBrev/MixBrev.csproj",
+            "use": "vercel-dotnet"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "MixBrev/MixBrev.csproj"
+        }
+    ],
+    "crons": [
+        {
+            "path": "/api/cron/sync-cohorts",
+            "schedule": "0 */6 * * *"
+        }   ]
+}
