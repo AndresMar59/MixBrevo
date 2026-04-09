@@ -1,20 +1,22 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "*.csproj",
-            "use": "vercel-dotnet",
-            "config": { "maxDuration": 60 }
+    "functions": {
+        "Program.cs": {
+            "runtime": "vercel-dotnet@0.6.1"
         }
-    ],
+    },
     "routes": [
         {
-            "src": "/api/(.*)",
-            "dest": "/"
+            "src": "/swagger/(.*)",
+            "dest": "Program.cs"
         },
         {
-            "src": "/swagger/(.*)",
-            "dest": "/"
+            "src": "/api/(.*)",
+            "dest": "Program.cs"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "Program.cs"
         }
     ],
     "crons": [
