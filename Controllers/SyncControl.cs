@@ -41,9 +41,24 @@ namespace MixBrev.Controllers
                 return Unauthorized("Clave de sincronización inválida.");
             }
 
-            // Ahora _syncService ya existe y no marcará error
-            var results = await _syncService.SyncAllCohortsAsync();
-            return Ok(results);
+            // 2. DISPARAR Y OLVIDAR (Fire and Forget)
+            // Esto lanza la sincronización en un hilo aparte
+            _ = Task.Run(async () => {
+                try
+                {
+                    await _syncService.SyncAllCohortsAsync();
+                    Console.WriteLine("Sincronización completada con éxito.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en segundo plano: {ex.Message}");
+                }
+            });
+
+            // 3. RESPONDER DE INMEDIATO
+            // Al devolver esto, el Cron-job recibe respuesta en menos de 1 segundo
+            // y se marca como EXITOSO (Verde)
+            return Accepted(new { message = "Proceso iniciado correctamente" });
         }
 
         [HttpGet("{cohortId}")]
