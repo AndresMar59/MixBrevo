@@ -1,22 +1,22 @@
 {
     "version": 2,
     "functions": {
-        "Program.cs": {
+        "*.cs": {
             "runtime": "vercel-dotnet@0.6.1"
         }
     },
     "routes": [
         {
             "src": "/swagger/(.*)",
-            "dest": "Program.cs"
+            "dest": "/"
         },
         {
             "src": "/api/(.*)",
-            "dest": "Program.cs"
+            "dest": "/"
         },
         {
             "src": "/(.*)",
-            "dest": "Program.cs"
+            "dest": "/"
         }
     ],
     "crons": [
