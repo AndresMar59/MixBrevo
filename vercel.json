@@ -2,8 +2,9 @@
     "version": 2,
     "builds": [
         {
-            "src": "MixBrev.csproj",
-            "use": "vercel-dotnet"
+            "src": "*.csproj",
+            "use": "vercel-dotnet",
+            "config": { "maxDuration": 60 }
         }
     ],
     "routes": [
