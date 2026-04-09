@@ -30,35 +30,41 @@ namespace MixBrev.Controllers
         }
 
         [HttpGet("sync-cohorts")]
-        public async Task<IActionResult> RunSync()
+        public IActionResult RunSync([FromServices] IServiceScopeFactory scopeFactory)
         {
-            // Vercel envía el secreto en el header "Authorization"
             var authHeader = Request.Headers["Authorization"].ToString();
-            var cronSecret = _configuration["CRON_SECRET"]; // Variable que Vercel crea sola
+            var cronSecret = _configuration["CRON_SECRET"];
 
             if (string.IsNullOrEmpty(authHeader) || authHeader != $"Bearer {cronSecret}")
             {
                 return Unauthorized("Clave de sincronización inválida.");
             }
 
-            // 2. DISPARAR Y OLVIDAR (Fire and Forget)
-            // Esto lanza la sincronización en un hilo aparte
+            // DISPARAR Y OLVIDAR (Correctamente en Railway)
             _ = Task.Run(async () => {
-                try
+                // Creamos un scope nuevo que no depende de la petición HTTP
+                using (var scope = scopeFactory.CreateScope())
                 {
-                    await _syncService.SyncAllCohortsAsync();
-                    Console.WriteLine("Sincronización completada con éxito.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error en segundo plano: {ex.Message}");
+                    try
+                    {
+                        // Obtenemos el servicio desde este nuevo scope
+                        var syncService = scope.ServiceProvider.GetRequiredService<ISyncService>();
+
+                        Console.WriteLine($"[{DateTime.Now}] Iniciando sincronización pesada...");
+                        await syncService.SyncAllCohortsAsync();
+                        Console.WriteLine($"[{DateTime.Now}] Sincronización completada con éxito.");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Esto saldrá en tus logs de Railway
+                        Console.WriteLine($"[{DateTime.Now}] ERROR en segundo plano: {ex.Message}");
+                        if (ex.InnerException != null)
+                            Console.WriteLine($"Inner: {ex.InnerException.Message}");
+                    }
                 }
             });
 
-            // 3. RESPONDER DE INMEDIATO
-            // Al devolver esto, el Cron-job recibe respuesta en menos de 1 segundo
-            // y se marca como EXITOSO (Verde)
-            return Accepted(new { message = "Proceso iniciado correctamente" });
+            return Accepted(new { message = "Proceso iniciado en segundo plano" });
         }
 
         [HttpGet("{cohortId}")]
