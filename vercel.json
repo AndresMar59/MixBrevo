@@ -9,12 +9,17 @@
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "MixBrev.csproj"
+            "dest": "/"
+        },
+        {
+            "src": "/swagger/(.*)",
+            "dest": "/"
         }
     ],
     "crons": [
         {
             "path": "/api/cron/sync-cohorts",
             "schedule": "0 */6 * * *"
-        }   ]
+        }
+    ]
 }
