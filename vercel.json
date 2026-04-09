@@ -2,14 +2,14 @@
     "version": 2,
     "builds": [
         {
-            "src": "MixBrev/MixBrev.csproj",
+            "src": "MixBrev.csproj",
             "use": "vercel-dotnet"
         }
     ],
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "MixBrev/MixBrev.csproj"
+            "dest": "MixBrev.csproj"
         }
     ],
     "crons": [

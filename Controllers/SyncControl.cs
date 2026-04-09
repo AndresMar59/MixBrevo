@@ -7,7 +7,7 @@ namespace MixBrev.Controllers
 {
 
     [ApiController] // Añade esto para que sea un API Controller formal
-    [Route("api/[controller]")]
+    [Route("api/cron")]
     public class SyncControl : ControllerBase
     {
         private readonly ISyncService _syncService; // Definir la variable
@@ -20,7 +20,16 @@ namespace MixBrev.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet("/api/cron/sync-cohorts")]
+
+
+        [HttpPost("/")]
+
+        public string Post()
+        {
+            return "Microservidor-vivo. ES NECESARIO LLAVE PARA APIS";
+        }
+
+        [HttpGet("sync-cohorts")]
         public async Task<IActionResult> RunSync()
         {
             // Vercel envía el secreto en el header "Authorization"
@@ -29,7 +38,7 @@ namespace MixBrev.Controllers
 
             if (string.IsNullOrEmpty(authHeader) || authHeader != $"Bearer {cronSecret}")
             {
-                return Unauthorized();
+                return Unauthorized("Clave de sincronización inválida.");
             }
 
             // Ahora _syncService ya existe y no marcará error
@@ -37,16 +46,18 @@ namespace MixBrev.Controllers
             return Ok(results);
         }
 
-        [HttpGet("api/single/{cohortId}")]
+        [HttpGet("{cohortId}")]
         public async Task<IActionResult> RunSingleSync(string cohortId)
 
         {
+            var authHeader = Request.Headers["Authorization"].ToString();
+            var cronSecret = _configuration["CRON_SECRET"]; // Variable que Vercel crea sola
 
-            if (!Request.Headers.TryGetValue("x-sync-key", out var extractedKey) ||
-                extractedKey != _configuration["Sync:SecretKey"])
+            if (string.IsNullOrEmpty(authHeader) || authHeader != $"Bearer {cronSecret}")
             {
                 return Unauthorized("Clave de sincronización inválida.");
             }
+
             var result = await _syncService.ExecuteFullSyncAsync(cohortId);
 
             if (result.TotalFoundInMixpanel == 0)
