@@ -21,14 +21,6 @@ namespace MixBrev.Controllers
         }
 
 
-
-        [HttpPost("/")]
-
-        public string Post()
-        {
-            return "Microservidor-vivo. ES NECESARIO LLAVE PARA APIS";
-        }
-
         [HttpGet("sync-cohorts")]
         public IActionResult RunSync([FromServices] IServiceScopeFactory scopeFactory)
         {
@@ -88,7 +80,7 @@ namespace MixBrev.Controllers
         }
 
 
-        [HttpGet("/health")]
+        [HttpGet("/")]
         public IActionResult Health()
         {
             return Ok("punto de control: vivo");
