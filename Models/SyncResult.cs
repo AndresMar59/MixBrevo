@@ -6,7 +6,7 @@
         public int TotalFoundInMixpanel { get; set; }
 
         // Cuántos de esos IDs tenían un perfil real en tu base de datos (Supabase)
-        public int EnrichedFromData { get; set; }
+        public int? EnrichedFromData { get; set; }
 
         public string CohortId { get; set; }
 

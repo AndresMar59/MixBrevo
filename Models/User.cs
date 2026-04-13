@@ -14,7 +14,7 @@ namespace MixBrev.Models
         public string first_name { get; set; }
 
         [JsonPropertyName("last_names")]
-        public string last_names { get; set; }
+        public string? last_names { get; set; }
 
         [JsonPropertyName("company_id")]
         public string company_id { get; set; }

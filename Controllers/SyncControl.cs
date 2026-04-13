@@ -21,14 +21,6 @@ namespace MixBrev.Controllers
         }
 
 
-
-        [HttpPost("/")]
-
-        public string Post()
-        {
-            return "Microservidor-vivo. ES NECESARIO LLAVE PARA APIS";
-        }
-
         [HttpGet("sync-cohorts")]
         public IActionResult RunSync([FromServices] IServiceScopeFactory scopeFactory)
         {
@@ -79,7 +71,7 @@ namespace MixBrev.Controllers
                 return Unauthorized("Clave de sincronización inválida.");
             }
 
-            var result = await _syncService.ExecuteFullSyncAsync(cohortId);
+            var result = await _syncService.ExecuteFullSyncAsyncMixpanel(cohortId);
 
             if (result.TotalFoundInMixpanel == 0)
                 return NotFound($"No se encontraron usuarios para la cohorte {cohortId}");
@@ -88,7 +80,7 @@ namespace MixBrev.Controllers
         }
 
 
-        [HttpGet("/health")]
+        [HttpGet("/")]
         public IActionResult Health()
         {
             return Ok("punto de control: vivo");

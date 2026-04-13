@@ -44,10 +44,10 @@ namespace MixBrev.Services
             {
                 var attributes = new JObject {
             { "FIRSTNAME", user.first_name },
-            { "LASTNAME", user.last_names },
+            { "LASTNAME", user.last_names ?? "" }, // Si last_names es null, se asigna una cadena vacía para evitar errores de Brevo
             { "COHORT", cohortId },
             { "COMPANY", user.company_id },
-            {"EXT_ID", user.user_account_id}
+            {"EXT_ID", user.user_account_id ?? ""}
 
         };
 
