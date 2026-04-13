@@ -88,7 +88,11 @@ namespace MixBrev.Controllers
         }
 
 
-
+        [HttpGet("/health")]
+        public IActionResult Health()
+        {
+            return Ok("punto de control: vivo");
+        }
 
     }
 }
