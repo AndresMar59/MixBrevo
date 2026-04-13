@@ -15,76 +15,96 @@ namespace MixBrev.Services
             _idata = Idata;
             _brevo = IBrevo;
            
-        }  
+        }
 
         public async Task<SyncResult> ExecuteFullSyncAsync(string cohortId)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            var result = new SyncResult();
+            var result = new SyncResult { CohortId = cohortId };
 
-
-            result.CohortId = cohortId;
-
-            // 1. Mixpanel
+            // 1. Mixpanel (Trae todos los IDs de un golpe)
             var ids = await _mixpanel.GetMixpanelDataAsync(cohortId);
             result.TotalFoundInMixpanel = ids.Count;
-
             if (ids.Count == 0) return result;
 
-            // 2. MicroData
+            // 2. MicroData (Trae los detalles de un golpe)
             var users = await _idata.GetUsersDetailsAsync(ids);
             result.EnrichedFromData = users.Count;
             if (users.Count == 0) return result;
 
-            // 3. Brevo 
-            foreach (var user in users)
-            {
-                try
-                {
-                    var success = await _brevo.SyncUserToBrevoAsync(user, cohortId);
-                 // No integrar aun   await _bigQuery.LogSyncEventAsync(user, success ? "Success" : "Brevo_Error");
+            // 1. Variable local para el conteo seguro entre hilos
+            int totalSuccess = 0;
 
-                    if (success) result.SuccessfullySynced++;
-                }
-                catch (Exception ex)
+            // 3. Brevo - PARALELISMO CONTROLADO
+            int batchSize = 10;
+            for (int i = 0; i < users.Count; i += batchSize)
+            {
+                var batch = users.Skip(i).Take(batchSize);
+
+                var tasks = batch.Select(async user =>
                 {
-                    result.Errors.Add($"Error syncing {user.email}: {ex.Message}");
-                }
+                    try
+                    {
+                        var success = await _brevo.SyncUserToBrevoAsync(user, cohortId);
+                        if (success)
+                        {
+                            // AHORA SÍ: Usamos la variable local con ref
+                            Interlocked.Increment(ref totalSuccess);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lock (result.Errors) { result.Errors.Add($"Error {user.email}: {ex.Message}"); }
+                    }
+                });
+
+                await Task.WhenAll(tasks);
             }
+
+            // --- ¡ESTA LÍNEA ES VITAL! ---
+            result.SuccessfullySynced = totalSuccess;
+            // ----------------------------
 
             watch.Stop();
             result.DurationSeconds = watch.Elapsed.TotalSeconds;
             return result;
         }
 
-       public async Task<List<SyncResult>> SyncAllCohortsAsync()
+
+        public async Task<List<SyncResult>> SyncAllCohortsAsync()
         {
-            // 1. Definimos la lista de todos tus IDs de cohortes de Mixpanel
             var cohorts = new List<string>
     {
-                "6027991" , // Sign-up - Prompt 
-                "6032434" , // Cohort Matching-Job
-                "6028090" , // Cohort Prompt-Matching
-                "6032435" , // Cohort Job-Pipeline
-                "6032438" , // Cohort Pipeline-Hire
-                "6032445" , // Cohort First-Hire
-             //   "6039050"  // Test
-    }; 
+        "6027991", "6032434", "6028090", "6032435", "6032438", "6032445"
+    };
 
             var overallResults = new List<SyncResult>();
 
-            // 2. Ejecutamos el ciclo
             foreach (var cohortId in cohorts)
             {
-                // Reutilizamos la lógica que ya tienes programada
+                Console.WriteLine($"[{DateTime.Now}] Procesando Cohort: {cohortId}");
+
                 var result = await ExecuteFullSyncAsync(cohortId);
                 overallResults.Add(result);
 
-                // Esperar 2 segundos entre cohorts para liberar la carga de la API
-                await Task.Delay(6000);
+                // Con 1 segundo es suficiente si el proceso interno es eficiente
+                await Task.Delay(1000);
             }
 
             return overallResults;
         }
+
+        
     }
 }
+
+
+
+
+
+
+       
+
+
+
+
